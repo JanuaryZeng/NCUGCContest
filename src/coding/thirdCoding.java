@@ -6,14 +6,11 @@ public class thirdCoding {
 	static int number = 0;
 	public static void traverseFolder2(String path) {
         File file = new File(path);
-//        System.out.println(number);
         int n = number;
         while(n > 0) {
         	System.out.print("  ");
         	n--;
         }
-        String str = file.getName().substring(file.getName().lastIndexOf(".") + 1);
-        System.out.println("******"+str);
         System.out.println("+--" + file.getName());
         if (file.exists()) {
             File[] files = file.listFiles();
@@ -26,12 +23,16 @@ public class thirdCoding {
                     	traverseFolder2(file2.getAbsolutePath());
                         number--;
                     } else {
-                    	n = number+1;
-                        while(n > 0) {
-                        	System.out.print("  ");
-                        	n--;
+                        String filename = file2.getName();
+                        String str = filename.substring(filename.lastIndexOf(".") + 1);
+                        if("jpg".equals(str) || "png".equals(str) || "bmp".equals(str)) {
+                        	n = number+1;
+                            while(n > 0) {
+                            	System.out.print("  ");
+                            	n--;
+                            }
+                            System.out.println("--" + file2.getName());
                         }
-                        System.out.println("--" + file2.getName());
                     }
                 }
             }
