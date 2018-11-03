@@ -2,11 +2,13 @@ package coding;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
@@ -15,7 +17,11 @@ public class three {
 	
 	static List<List<String>> record = new ArrayList<List<String>>();//数据集
 	static List<List<String>> frequentItemset = new ArrayList<>();//存储所有的频繁项集
-	public static int times=5;//迭代次数
+	static HashMap<List<String>,Double> UTFCmap = new HashMap<>();
+	static HashMap<Set<String>,List<String>> Itemset = new HashMap<Set<String>,List<String>>();
+	static HashMap<HashMap<Integer,String>,Double> hhd = new HashMap<>();
+	static List<String> print = new ArrayList<String>();
+	public static int times=3;//迭代次数
 	private static double MIN_SUPPROT = 0.01;//最小支持度百分比
 	private static double MIN_CONFIDENCE = 0.6;//最小置信度
 	private static boolean endTag = false;//循环状态，迭代标识
@@ -25,8 +31,34 @@ public class three {
 		List<List<String>> data = new ArrayList<>();
 		data = getUTFC();
 		ShowData(data);
-
+		
+		Set<List<String>> set = UTFCmap.keySet();
+		System.out.println(set);
+		Iterator<List<String>> in = set.iterator();
+//		while(in.hasNext()) {
+//			System.out.println(UTFCmap.containsKey(in.next()));
+//		}
+		List<String> ii = new ArrayList();
+		ii.add(String.valueOf(3));
+		ii.add("<mybatis>");
+		System.out.println(UTFCmap.containsKey(ii));
+		
 		secondMain();
+
+		calculate();
+		
+		showHHD();
+	}
+		
+	public static void showHHD() {
+		Set<HashMap<Integer, String>> his = hhd.keySet();
+		for(HashMap<Integer, String> his1 : his) {
+			Set<Integer> his2 = his1.keySet();
+			for(Integer i : his2) {
+				System.out.print(i+" "+his1.get(i));
+			}
+			System.out.println(" "+hhd.get(his1));
+		}
 	}
 
 	public static void secondMain() throws IOException {
@@ -73,8 +105,146 @@ public class three {
 		}
 	}
 	
+	public static void showUTCmap() {
+		Set<List<String>> uSet = UTFCmap.keySet();
+		Iterator<List<String>> in = uSet.iterator();
+		while(in.hasNext()) {
+			List<String> ss =  in.next();
+			
+			Iterator<String> in2 = ss.iterator();
+			while(in2.hasNext()) {
+				System.out.print(in2.next()+" ");
+			}
+			System.out.print("------>");
+			System.out.println(UTFCmap.get(ss));
+		}
+		
+	}
+	
+	public static void showItemset() {
+		Set<Set<String>> ss = Itemset.keySet();
+		Iterator<Set<String>> in = ss.iterator();
+		while(in.hasNext()) {
+			Set<String> ss1 = in.next();
+			Iterator<String> in2 = ss1.iterator();
+			while(in2.hasNext()) {
+				System.out.print(in2.next()+" ");
+			}
+			System.out.print("------>>");
+			List<String> li = Itemset.get(ss1);
+			Iterator<String> in1 = li.iterator();
+			while(in1.hasNext()) {
+				System.out.print(in1.next()+" ");
+			}
+			System.out.println();
+		}
+	}
+
+	public static void calculate() {
+//		UTFCmap Itemset print
+		Set<List<String>> uSet = UTFCmap.keySet();
+//		showUTCmap();
+		
+		for(int i = 1; i <=20; i++) {
+			//将每一为工程师的五个标签取出来
+			Set<String> SetValue = new HashSet<>();
+			for(List<String> setStr : uSet) {
+				if(setStr.contains(String.valueOf(i))) {
+					
+					setStr.remove(String.valueOf(i));
+					for(String s:setStr) {
+						SetValue.add(s);
+					}
+				}
+			}
+			//一个标签的推荐结果
+			for(String str:SetValue) {
+				Set<String> Set1 = new HashSet<>();
+				Set1.add(str);
+			 	List<String> l = new ArrayList<>();
+			 	l.add(String.valueOf(i));
+			 	l.add(str);
+			 	/**
+			 	 * 错误记录：程序员的匹配错误
+			 	 */
+				if(Itemset.containsKey(Set1)) {
+				 	List<String> lst = Itemset.get(Set1);
+				 	double d1 = Double.parseDouble(lst.get(1));
+				 	System.out.println(UTFCmap);
+				 	System.out.println(UTFCmap.containsKey(l));
+				 	System.out.println(str);
+
+				 	double d2 = UTFCmap.get(l);
+				 	double d3 = d2*d1;
+				 	String str1 = lst.get(0);
+				 	HashMap<Integer,String> his = new HashMap<Integer,String>();
+				 	his.put(i, str1);
+				 	hhd.put(his,d3);
+				}
+			}
+			for(String str1:SetValue) {
+				for(String str2:SetValue) {
+					Set<String> setStr1 = new HashSet<String>();
+					setStr1.add(str1);
+					Set<String> l = new HashSet<>();
+				 	l.add(String.valueOf(i));
+				 	l.add(str1);
+					Set<String> ll = new HashSet<>();
+				 	ll.add(String.valueOf(i));
+				 	ll.add(str2);
+					if(setStr1.contains(str1))
+						setStr1.add(str2);
+					if(UTFCmap.containsKey(ll)&&UTFCmap.containsKey(l)&&setStr1.size()==2 && Itemset.containsKey(setStr1)) {
+						List<String> lst = Itemset.get(setStr1);
+						double d1 = Double.parseDouble(lst.get(1));
+					 	double d2 = UTFCmap.get(l);
+					 	double d3 = UTFCmap.get(ll);
+					 	double d4 = (d2+d3)*d1;
+					 	String str3 = lst.get(0);
+					 	HashMap<Integer,String> his = new HashMap<Integer,String>();
+					 	his.put(i, str3);
+					 	hhd.put(his,d4);
+					}
+				}
+			}
+			for(String str1:SetValue) {
+				for(String str2:SetValue) {
+					for(String str3:SetValue) {
+						Set<String> setStr1 = new HashSet<String>();
+						setStr1.add(str1);
+						Set<String> l = new HashSet<>();
+					 	l.add(String.valueOf(i));
+					 	l.add(str1);
+						if(setStr1.contains(str1))
+							setStr1.add(str2);
+						if(setStr1.contains(str2))
+							setStr1.add(str3);
+						if(UTFCmap.containsKey(l)&&setStr1.size()==3 && Itemset.containsKey(setStr1)) {
+							List<String> lst = Itemset.get(setStr1);
+							double d1 = Double.parseDouble(lst.get(1));
+						 	double d2 = UTFCmap.get(l);
+						 	l.remove(str1);
+						 	l.add(str2);
+						 	double d3 = UTFCmap.get(l);
+						 	l.remove(str2);
+						 	l.add(str3);
+						 	double d4 = UTFCmap.get(l);
+						 	double d5 = (d2+d3+d4)*d1;
+						 	String str4 = lst.get(0);
+						 	HashMap<Integer,String> his = new HashMap<Integer,String>();
+						 	his.put(i, str4);
+						 	hhd.put(his,d5);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public static void AssociationRulesMining()//关联规则挖掘
 	{
+		List<String> value = new ArrayList<>();
+		
 		for(int i=0;i<frequentItemset.size();i++)
 		{
 			List<String> tem=frequentItemset.get(i);
@@ -85,8 +255,16 @@ public class three {
 					List<String> s1 = AllSubset.get(j);
 					List<String> s2 = gets2set(tem, s1);
 					double conf = isAssociationRules(s1, s2, tem);
-					if (conf > 0)
+					if (conf > 0) {
 						System.out.println("置信度为：" + conf);
+						Set<String> key = new HashSet<>();
+						for(String str:s1) {
+							key.add(str);
+						}
+						value = s2;
+						value.add(String.valueOf(conf));
+						Itemset.put(key,value);
+					}
 				}
 			}
 		}
@@ -308,15 +486,21 @@ public class three {
 		String path = "D:/大学/大三上/比赛/绿色计算机大赛/data/user_tag.csv";
 		List<User> user = getUserTagsFromCsv(path);
 		List<List<String>> data = new ArrayList<>();
+		
 		for(User U : user) {
 			List<String> D = new ArrayList<>();
-//			D.add(String.valueOf((U.getUserId())));
+			String str1 = String.valueOf((U.getUserId()));
 			for (Tag tag : U.getTags()) {
+				List<String> LLS = new ArrayList<>();	
+				LLS.add(str1);
 				D.add(tag.getName());
+				LLS.add(tag.getName());
 				D.add(String.valueOf(tag.getWeight()));
+				UTFCmap.put(LLS,tag.getWeight());
 			}
 			data.add(D);
 		}
+
 		return data;
 	}
 	
